@@ -12,7 +12,7 @@ DSH Insight Tree 是一个面向 DeepSeek Harness（DSH）的运行可观测与�
 - 本轮会话实际使用了哪些插件能力？
 - 启动失败时，问题是否能归因到某个非核心插件？
 
-当前版本：`0.1.1`。仓库已公开到 GitHub，npm `0.1.0` 已发布；`0.1.1` 用于同步发布元数据和对外文档。
+当前版本：`0.1.1`。仓库已公开到 GitHub，npm `0.1.1` 已发布并标记为 `latest`。
 
 ## 包形态
 
@@ -26,6 +26,62 @@ DSH Insight Tree 是一个面向 DeepSeek Harness（DSH）的运行可观测与�
 
 运行时依赖包括 `js-yaml`、`semver` 和 `zod`；Loader、Session Projection、Session Query 等
 DSH 组件以 peer dependency 接入，缺少可选组件时插件会降级而不是直接崩溃。
+
+## 安装
+
+### 从 npm 安装到 DSH
+
+在 PowerShell 中执行：
+
+```powershell
+dsh plugin --profile web add dsh-insight-tree
+```
+
+安装完成后重启 DSH Web，使 host、client bundle 和 `cordis.patch.yml` 装配生效：
+
+```powershell
+schtasks /run /tn DSHWebRestart
+```
+
+也可以用以下命令确认插件已经写入 `web` Profile：
+
+```powershell
+dsh --profile web --dump-config
+```
+
+启动 DSH 后，在“设置 → 插件 → 插件树”打开面板；对话页右侧的“本轮活动”入口只在 DSH 内显示。
+
+如果 pnpm 的 supply-chain 策略拦截了刚发布的依赖，只对本次安装命令临时放宽：
+
+```powershell
+dsh plugin --profile web add dsh-insight-tree --config.minimum-release-age=0
+```
+
+### 本地开发安装
+
+从源码目录 link 安装：
+
+```powershell
+dsh plugin --profile web add I:\DSH\dsh-insight-tree
+```
+
+修改源码并重新构建后，需要重启 DSH Web 才会加载新的 `lib/`。
+
+### 独立诊断页面
+
+独立诊断命令随 npm 包安装，可在 DSH 运行或未运行时单独启动：
+
+```powershell
+dsh-insight-tree-diagnose --profile web --port 3092
+```
+
+然后访问 `http://127.0.0.1:3092/`。如果尚未全局可用，也可以直接执行包内脚本：
+
+```powershell
+node node_modules\dsh-insight-tree\bin\diagnose.mjs --profile web --port 3092
+```
+
+正常启动 DSH 不会自动打开独立页面；只有启动失败且报告明确归因到非核心插件时，包装命令才会自动打开诊断页。
 
 ## 设计思路
 
