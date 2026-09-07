@@ -1,10 +1,10 @@
 {
   "name": "dsh-insight-tree",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "DSH 结构、插件关系、版本适配与运行状态可视化面板",
   "repository": {
     "type": "git",
-    "url": "https://github.com/xingzhen199186/dsh-insight-tree.git"
+    "url": "git+https://github.com/xingzhen199186/dsh-insight-tree.git"
   },
   "homepage": "https://github.com/xingzhen199186/dsh-insight-tree#readme",
   "bugs": {
@@ -27,8 +27,8 @@
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
   "bin": {
-    "dsh-insight-tree-diagnose": "./bin/diagnose.mjs",
-    "dsh-insight-tree-web": "./bin/web-with-diagnostics.mjs"
+    "dsh-insight-tree-diagnose": "bin/diagnose.mjs",
+    "dsh-insight-tree-web": "bin/web-with-diagnostics.mjs"
   },
   "exports": {
     ".": {
@@ -112,5 +112,10 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "build": "tsc -p tsconfig.json && tsdown --config tsdown.config.ts && node scripts/client-banner.mjs",
     "test": "npm run build && node --test tests/*.test.mjs"
-  }
+  },
+  "directories": {
+    "lib": "lib",
+    "test": "tests"
+  },
+  "author": ""
 }

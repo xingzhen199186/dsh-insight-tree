@@ -2,7 +2,11 @@
 
 本仓库所有用户可见变更记录于此处。格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 
-## [Unreleased] - 2026-09-07
+## [Unreleased]
+
+暂无。
+
+## [0.1.1] - 2026-09-07
 
 ### 变更
 - 「插件树」折叠胶囊展开后支持点击面板外空白处收起（`pointerdown` 外部关闭，面板/胶囊内点击不受影响、不阻断页面其他交互）。
