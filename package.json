@@ -23,7 +23,6 @@
     "runtime-diagnostics",
     "compatibility"
   ],
-  "private": true,
   "type": "module",
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
