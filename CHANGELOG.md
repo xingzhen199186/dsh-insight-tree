@@ -5,6 +5,7 @@
 ## [Unreleased]
 
 - 补齐 README 的 npm 安装、本地 link 安装、安装后重启/验证和独立诊断使用说明。
+- 新增英文版 README（`README.en.md`），并在中英文 README 之间增加跳转链接。
 
 ## [0.1.1] - 2026-09-07
 
