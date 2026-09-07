@@ -1,5 +1,7 @@
 # DSH Insight Tree
 
+[English README](README.en.md)
+
 DSH Insight Tree 是一个面向 DeepSeek Harness（DSH）的运行可观测与故障诊断插件。
 它把 Profile 配置、实际安装包、Loader 运行状态、会话活动和上游版本信息合并成一份可解释的报告，
 再以插件树、当前会话活动和独立诊断页呈现给用户。
