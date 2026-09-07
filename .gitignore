@@ -1,0 +1,22 @@
+node_modules/
+lib/
+*.tgz
+boot*.log
+.vitest/
+coverage/
+
+# local test artifacts
+smoke
+smoke-*
+
+# local backups
+.bak-*
+
+# local delivery evidence
+DELIVERY-EVIDENCE.md
+
+# private verification artifacts and handoff notes
+.tmp-*
+.verify/
+node
+tasks/

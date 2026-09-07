@@ -1,0 +1,4 @@
+- insert:
+    - id: dsh-insight-tree
+      name: dsh-insight-tree
+      config: {}
