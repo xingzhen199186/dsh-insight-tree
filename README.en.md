@@ -24,7 +24,7 @@ manually. It does not depend on the DSH Web UI or on a running DSH instance: lau
 command line to inspect the current DSH and its plugins as a whole, and perform the supported
 operations.
 
-Current version: `0.1.1`. The repository is public on GitHub and npm `0.1.1` is the `latest` release.
+<img width="771" height="774" alt="1788829120570" src="https://github.com/user-attachments/assets/dadec849-4722-4b02-927a-12e359b7c2ff" />
 
 ## Package Shape
 
