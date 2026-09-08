@@ -21,8 +21,6 @@ DSH Insight Tree 是一个面向 DeepSeek Harness（DSH）的运行可观测与�
 
 <img width="771" height="774" alt="1788829120570" src="https://github.com/user-attachments/assets/dadec849-4722-4b02-927a-12e359b7c2ff" />
 
-<img width="321" height="460" alt="1788829231443" src="https://github.com/user-attachments/assets/e29bbdb5-c17c-481f-9d00-8838a8a05f3b" />
-
 ## 包形态
 
 这是一个单 npm 包，包含四个使用面：
