@@ -223,9 +223,3 @@ tests, along with typecheck, both diagnostics script checks, and `git diff --che
 - Tool events without an explicit owner can only use stable mappings or remain marked as unconfirmed.
 - Unit tests do not replace route, SSE replay, or visual checks against a real DSH Web host.
 - Upstream directory, npm, and GitHub metadata require network access; offline mode uses cache when available.
-
-## Links
-
-- GitHub: <https://github.com/xingzhen199186/dsh-insight-tree>
-- npm: <https://www.npmjs.com/package/dsh-insight-tree>
-- DSH knowledge base: `D:\X\X\16-DSH\开发指南和架构文档\`
