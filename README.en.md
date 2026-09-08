@@ -7,13 +7,22 @@ It combines Profile configuration, installed packages, Loader runtime state, ses
 and upstream release metadata into one explainable report, then presents that report through a
 plugin tree, a current-session activity panel, and a standalone diagnostics page.
 
-It is not a plugin marketplace or a third-party security auditor. It answers practical questions:
+It is not a plugin marketplace. It answers practical questions:
 
 - What is installed and assembled in the current Profile?
 - Did the Loader actually load each plugin, and which Fiber phase is it in?
 - Is a plugin compatible with the DSH host and its companion packages?
 - Which plugin capabilities were used in the current session?
 - If startup fails, can the failure be attributed to a non-core plugin?
+
+You can also manage installed plugins directly from the plugin tree, including disabling,
+re-enabling, uninstalling, and updating them.
+
+The plugin includes a standalone diagnostics page. When DSH fails to start and the failure is
+identified as plugin-related, the diagnostics page opens automatically. You can also start it
+manually. It does not depend on the DSH Web UI or on a running DSH instance: launch it from the
+command line to inspect the current DSH and its plugins as a whole, and perform the supported
+operations.
 
 Current version: `0.1.1`. The repository is public on GitHub and npm `0.1.1` is the `latest` release.
 
