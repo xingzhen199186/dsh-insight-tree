@@ -251,11 +251,3 @@ schtasks /run /tn DSHWebRestart
 - 单元测试不能替代真实 DSH Web 主机上的路由、SSE 回放和视觉验证。
 - 上游目录、npm 和 GitHub 信息依赖网络；离线时使用缓存，缓存不可用则明确显示离线状态。
 
-## 相关资料
-
-权威 DSH 架构和插件开发资料位于知识库 X：
-`D:\X\X\16-DSH\开发指南和架构文档\`。
-
-本插件的留档位于：
-`D:\X\X\16-DSH\plugins\dsh-insight-tree\dsh-insight-tree.md`，总览位于
-`D:\X\X\16-DSH\plugins\dsh-plugins-overview\dsh-plugins 总览.md`。
