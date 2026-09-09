@@ -2,10 +2,12 @@
 
 本仓库所有用户可见变更记录于此处。格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 
-## [Unreleased]
+## [0.1.2] - 2026-09-10
 
+- 修复独立诊断页 CSP 缺少 `connect-src 'self'` 导致浏览器拦截同源卸载、启停和重新检查请求的问题。
 - 补齐 README 的 npm 安装、本地 link 安装、安装后重启/验证和独立诊断使用说明。
 - 新增英文版 README（`README.en.md`），并在中英文 README 之间增加跳转链接。
+- 修复独立诊断页卸载插件遇到 pnpm `minimumReleaseAge` 冷静期时直接失败的问题：仅对本次卸载追加一次性豁免参数并保留错误摘要。
 
 ## [0.1.1] - 2026-09-07
 

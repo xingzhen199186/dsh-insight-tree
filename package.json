@@ -1,6 +1,6 @@
 {
   "name": "dsh-insight-tree",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "DSH 结构、插件关系、版本适配与运行状态可视化面板",
   "repository": {
     "type": "git",

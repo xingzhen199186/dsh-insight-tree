@@ -1,6 +1,12 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { apply, createHotOperations, runtimeFor } from '../lib/index.js'
+import { apply, createHotOperations, minimumReleaseAgeFailure, runtimeFor } from '../lib/index.js'
+
+test('识别 pnpm 全 lockfile 冷静期失败', () => {
+  assert.equal(minimumReleaseAgeFailure({ code: 1, stdout: '', stderr: 'ERR_PNPM_MINIMUM_RELEASE_AGE_VIOLATION' }), true)
+  assert.equal(minimumReleaseAgeFailure({ code: 1, stdout: '', stderr: '普通卸载失败' }), false)
+  assert.equal(minimumReleaseAgeFailure({ code: 0, stdout: 'minimum-release-age', stderr: '' }), false)
+})
 
 test('没有宿主 plugin 服务时热挂载保守返回 false', async () => {
   const hot = createHotOperations(undefined, 'C:\\missing-profile')

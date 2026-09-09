@@ -58,7 +58,7 @@ interface RouteResponse {
 let mutationLock = false
 
 const securityHeaders: Record<string, string> = {
-  'content-security-policy': "default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src 'data:'",
+  'content-security-policy': "default-src 'none'; connect-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src 'data:'",
   'x-content-type-options': 'nosniff',
 }
 
@@ -212,6 +212,25 @@ async function setPluginDisabled(profile: string, id: string, disabled: boolean,
   }
 }
 
+interface DshCommandResult { code: number | null; stdout: string; stderr: string }
+
+function runDshCommand(args: string[], timeoutMs = 300_000): Promise<DshCommandResult> {
+  return new Promise((resolve) => {
+    const child = spawnDsh(args, { windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] })
+    let stdout = ''
+    let stderr = ''
+    const timer = setTimeout(() => { child.kill(); resolve({ code: null, stdout, stderr }) }, timeoutMs)
+    child.stdout?.on('data', (chunk: Buffer) => { stdout += chunk.toString() })
+    child.stderr?.on('data', (chunk: Buffer) => { stderr += chunk.toString() })
+    child.once('error', (error) => { clearTimeout(timer); resolve({ code: null, stdout, stderr: `${stderr}${error.message}` }) })
+    child.once('exit', (code) => { clearTimeout(timer); resolve({ code, stdout, stderr }) })
+  })
+}
+
+export function minimumReleaseAgeFailure(result: DshCommandResult): boolean {
+  return result.code !== 0 && /MINIMUM_RELEASE_AGE|minimum-release-age|minimumReleaseAge|supply-chain policy/iu.test(`${result.stderr}\n${result.stdout}`)
+}
+
 async function uninstallPlugin(profile: string, id: string, runtime?: InsightTreeRuntime, patchIds: readonly string[] = [id]): Promise<{ ok: boolean; message: string; restartRequired: boolean; appliedNow?: boolean; rollbackCommand?: string }> {
   if (!/^[\w@./-]+$/u.test(id) || id.startsWith('@deepseek-ai/') || id === 'dsh-insight-tree') return Promise.resolve({ ok: false, message: '核心 DSH 包或当前诊断插件不能从 Insight Tree 中卸载。', restartRequired: true })
   const profileDir = path.join(process.env.DSH_HOME || path.join(os.homedir(), '.dsh'), 'profiles', profile)
@@ -220,65 +239,61 @@ async function uninstallPlugin(profile: string, id: string, runtime?: InsightTre
   const stamp = Date.now()
   if (fs.existsSync(packageFile)) fs.copyFileSync(packageFile, `${packageFile}.bak-insight-tree-${stamp}`)
   if (fs.existsSync(patchFile)) fs.copyFileSync(patchFile, `${patchFile}.bak-insight-tree-${stamp}`)
-  return new Promise((resolve) => {
-    const child = spawnDsh(['plugin', '--profile', profile, 'remove', id], { windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] })
-    let stdout = ''
-    let stderr = ''
-    child.stdout?.on('data', (chunk: Buffer) => { stdout += chunk.toString() })
-    child.stderr?.on('data', (chunk: Buffer) => { stderr += chunk.toString() })
-    child.once('error', (error) => resolve({ ok: false, message: `无法启动卸载命令：${error.message}`, restartRequired: true }))
-    child.once('exit', async (code) => {
-      if (code !== 0) {
-        resolve({ ok: false, message: `卸载命令退出码为 ${code ?? '未知'}：${[stderr, stdout].map((value) => value.trim()).filter(Boolean).join('；').slice(0, 400) || '没有可用错误摘要'}`, restartRequired: true })
-        return
-      }
+  const removeArgs = ['plugin', '--profile', profile, 'remove', id]
+  let command = await runDshCommand(removeArgs)
+  let retriedForReleaseAge = false
+  if (minimumReleaseAgeFailure(command)) {
+    retriedForReleaseAge = true
+    command = await runDshCommand([...removeArgs, '--config.minimum-release-age=0'])
+  }
+  if (command.code !== 0) {
+    return { ok: false, message: `卸载命令退出码为 ${command.code ?? '未知'}：${[command.stderr, command.stdout].map((value) => value.trim()).filter(Boolean).join('；').slice(0, 400) || '没有可用错误摘要'}`, restartRequired: true }
+  }
+  try {
+    let appliedNow = false
+    let runtimeNote = ''
+    let runtimeFailure = false
+    if (runtime) {
       try {
-        let appliedNow = false
-        let runtimeNote = ''
-        let runtimeFailure = false
-        if (runtime) {
-          try {
-            appliedNow = (await runtime.remove(id)).matched > 0
-          } catch (error) {
-            runtimeNote = `当前运行实例未能移除：${error instanceof Error ? error.message : String(error)}`
-            try { appliedNow = (await runtime.setDisabled(id, true)).matched > 0 } catch { runtimeFailure = true }
-          }
-        }
-        let patchNote = ''
-        try {
-          if (fs.existsSync(patchFile)) {
-            const parsed = yaml.load(fs.readFileSync(patchFile, 'utf8'))
-            if (Array.isArray(parsed)) {
-              const cleaned = removePatchEntries(parsed, patchIds)
-              if (cleaned.removed > 0) fs.writeFileSync(patchFile, yaml.dump(cleaned.entries, { noRefs: true, lineWidth: -1 }), 'utf8')
-            }
-          }
-        } catch (error) {
-          patchNote = `补丁清理未完成：${error instanceof Error ? error.message : String(error)}`
-        }
-        const detail = [runtimeNote, patchNote].filter(Boolean).join('；')
-        resolve({
-          ok: !runtimeFailure,
-          message: appliedNow
-            ? `已卸载 ${id}，当前运行实例已立即移除。${detail ? ` ${detail}` : ''}`
-            : runtimeFailure
-              ? `已从 Profile 移除 ${id}，但当前运行实例无法确认已停止。请重启 DSH 完成清理；${detail}`
-              : `已卸载 ${id}，当前没有可立即移除的运行实例。${detail ? ` ${detail}` : ''}`,
-          rollbackCommand: `dsh plugin --profile ${profile} add ${id}`,
-          restartRequired: !appliedNow || Boolean(runtimeNote || patchNote),
-          appliedNow,
-        })
+        appliedNow = (await runtime.remove(id)).matched > 0
       } catch (error) {
-        resolve({
-          ok: true,
-          message: `已卸载 ${id}，但当前运行实例未能立即停止：${error instanceof Error ? error.message : String(error)}。请重启 DSH 完成清理。`,
-          rollbackCommand: `dsh plugin --profile ${profile} add ${id}`,
-          restartRequired: true,
-          appliedNow: false,
-        })
+        runtimeNote = `当前运行实例未能移除：${error instanceof Error ? error.message : String(error)}`
+        try { appliedNow = (await runtime.setDisabled(id, true)).matched > 0 } catch { runtimeFailure = true }
       }
-    })
-  })
+    }
+    let patchNote = ''
+    try {
+      if (fs.existsSync(patchFile)) {
+        const parsed = yaml.load(fs.readFileSync(patchFile, 'utf8'))
+        if (Array.isArray(parsed)) {
+          const cleaned = removePatchEntries(parsed, patchIds)
+          if (cleaned.removed > 0) fs.writeFileSync(patchFile, yaml.dump(cleaned.entries, { noRefs: true, lineWidth: -1 }), 'utf8')
+        }
+      }
+    } catch (error) {
+      patchNote = `补丁清理未完成：${error instanceof Error ? error.message : String(error)}`
+    }
+    const detail = [runtimeNote, patchNote].filter(Boolean).join('；')
+    return {
+      ok: !runtimeFailure,
+      message: appliedNow
+        ? `已卸载 ${id}，当前运行实例已立即移除。${retriedForReleaseAge ? ' 已按一次性 pnpm 冷静期豁免重试完成。' : ''}${detail ? ` ${detail}` : ''}`
+        : runtimeFailure
+          ? `已从 Profile 移除 ${id}，但当前运行实例无法确认已停止。请重启 DSH 完成清理；${detail}`
+          : `已卸载 ${id}，当前没有可立即移除的运行实例。${retriedForReleaseAge ? ' 已按一次性 pnpm 冷静期豁免重试完成。' : ''}${detail ? ` ${detail}` : ''}`,
+      rollbackCommand: `dsh plugin --profile ${profile} add ${id}`,
+      restartRequired: !appliedNow || Boolean(runtimeNote || patchNote),
+      appliedNow,
+    }
+  } catch (error) {
+    return {
+      ok: true,
+      message: `已卸载 ${id}，但当前运行实例未能立即停止：${error instanceof Error ? error.message : String(error)}。请重启 DSH 完成清理。`,
+      rollbackCommand: `dsh plugin --profile ${profile} add ${id}`,
+      restartRequired: true,
+      appliedNow: false,
+    }
+  }
 }
 
 function send(res: RouteResponse, status: number, body: string, extra: Record<string, string> = {}): void {

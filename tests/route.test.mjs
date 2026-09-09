@@ -48,6 +48,12 @@ test('bootstrap 返回令牌，受保护路由要求令牌', async () => {
   assert.equal(JSON.parse(ok.body).schemaVersion, 3)
 })
 
+test('安全响应允许独立页面访问同源操作端点', async () => {
+  const route = createInsightTreeRoute(() => report, 'web', {})
+  const result = await call(route, 'GET', '/dsh-insight-tree')
+  assert.match(result.headers['content-security-policy'], /connect-src 'self'/u)
+})
+
 test('export 与 compare 端点行为正确', async () => {
   const route = createInsightTreeRoute(() => report, 'web', { token: 'abc', getCompare: () => [{ profile: 'web', report }] })
   const md = await call(route, 'GET', '/dsh-insight-tree/export?format=md', { 'x-dsh-insight-tree-token': 'abc' })

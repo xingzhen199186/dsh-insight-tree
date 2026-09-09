@@ -24,6 +24,9 @@ manually. It does not depend on the DSH Web UI or on a running DSH instance: lau
 command line to inspect the current DSH and its plugins as a whole, and perform the supported
 operations.
 
+Current version: `0.1.2`. The repository is public on GitHub; for the published npm release see
+<https://www.npmjs.com/package/dsh-insight-tree>.
+
 <img width="771" height="774" alt="1788829120570" src="https://github.com/user-attachments/assets/dadec849-4722-4b02-927a-12e359b7c2ff" />
 
 ## Package Shape
@@ -214,7 +217,7 @@ node --check bin/web-with-diagnostics.mjs
 git diff --check
 ```
 
-`npm test` builds first and then runs `tests/*.test.mjs`. The latest full verification passed all `61/61`
+`npm test` builds first and then runs `tests/*.test.mjs`. The latest full verification passed all `63/63`
 tests, along with typecheck, both diagnostics script checks, and `git diff --check`.
 
 ## Current Limitations

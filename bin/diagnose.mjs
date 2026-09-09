@@ -15,7 +15,7 @@ const port = Number(portIndex >= 0 ? args[portIndex + 1] : 3092) || 3092
 const tokenIndex = args.indexOf('--token')
 const token = tokenIndex >= 0 ? args[tokenIndex + 1] || '' : ''
 let mutationLock = false
-const securityHeaders = { 'content-security-policy': "default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src 'data:'", 'x-content-type-options': 'nosniff' }
+const securityHeaders = { 'content-security-policy': "default-src 'none'; connect-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src 'data:'", 'x-content-type-options': 'nosniff' }
 function authOk(req) {
   if (!token) return true
   const given = req.headers['x-dsh-insight-tree-token'] || (new URL(req.url || '/', `http://${req.headers.host || '127.0.0.1'}`).searchParams.get('token') || '')
@@ -37,6 +37,10 @@ function runStaticDryRun(overlayFile) {
   const result = runDsh(['--profile', profile, '--patch', overlayFile, '--dump-config'])
   const details = [result.stderr, result.stdout].filter(Boolean).map((value) => value.trim()).filter(Boolean).join('；').slice(0, 400)
   return { ok: result.status === 0, message: result.status === 0 ? '' : `静态配置检查退出码 ${result.status ?? '未知'}：${details || '没有可用错误摘要'}` }
+}
+
+function minimumReleaseAgeFailure(result) {
+  return result.status !== 0 && /MINIMUM_RELEASE_AGE|minimum-release-age|minimumReleaseAge|supply-chain policy/iu.test([result.stderr, result.stdout, result.error?.message].filter(Boolean).join('\n'))
 }
 
 function setPluginDisabled(id, disabled, report) {
@@ -101,7 +105,13 @@ function uninstallPlugin(id, report) {
   if (fs.existsSync(profileFile)) { const backup = `${profileFile}.bak-insight-tree-${Date.now()}`; fs.copyFileSync(profileFile, backup); snapshots.push({ target: profileFile, backup, existed: true }) }
   else snapshots.push({ target: profileFile, backup: '', existed: false })
   const backups = snapshots.filter((item) => item.backup).map((item) => item.backup)
-  const result = runDsh(['plugin', '--profile', profile, 'remove', id])
+  const removeArgs = ['plugin', '--profile', profile, 'remove', id]
+  let result = runDsh(removeArgs)
+  let retriedForReleaseAge = false
+  if (minimumReleaseAgeFailure(result)) {
+    retriedForReleaseAge = true
+    result = runDsh([...removeArgs, '--config.minimum-release-age=0'])
+  }
   if (result.status === 0) {
     let patchMessage = ''
     try {
@@ -110,7 +120,8 @@ function uninstallPlugin(id, report) {
     } catch (error) {
       patchMessage = ` 补丁清理未完成：${error instanceof Error ? error.message : String(error)}`
     }
-    return { ok: true, message: `已卸载 ${id}（Profile 依赖已移除）。当前没有运行中的 DSH，启动后会按新配置加载。${patchMessage} 备份：${backups.join('；') || '无'}`, backup: backups[0], rollbackCommand: `dsh plugin --profile ${profile} add ${id}` }
+    const retryMessage = retriedForReleaseAge ? ' 已按一次性 pnpm 冷静期豁免重试完成。' : ''
+    return { ok: true, message: `已卸载 ${id}（Profile 依赖已移除）。${retryMessage}当前没有运行中的 DSH，启动后会按新配置加载。${patchMessage} 备份：${backups.join('；') || '无'}`, backup: backups[0], rollbackCommand: `dsh plugin --profile ${profile} add ${id}` }
   }
   const details = [result.stderr, result.stdout].filter(Boolean).join('；').trim().slice(0, 400)
   let restored = true

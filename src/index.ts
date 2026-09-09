@@ -16,6 +16,7 @@ import { createHotOperations } from './hot.js'
 import { isPluginRelatedFailure } from './diagnostics.js'
 
 export { discoverReport, snapshotLoaderEntries, isStructuralLoaderEntry, loaderEntryBelongsToPlugin, STRUCTURAL_ENTRY_ID_PREFIXES, foldActivityEvent, activityFromEvents, createActivityDefinition, ACTIVITY_KEY, renderMarkdownReport, renderPluginCsv, renderCompareMarkdown, sanitizeReport, applyRules, RULES_VERSION, createInsightTreeRoute, removePatchEntries, updatePatchEntries, TOOL_OWNER_LABELS, aggregatePluginUse, toolOwnerOf, runtimeFor, sessionUsageFromActivity, isPluginRelatedFailure }
+export { minimumReleaseAgeFailure } from './route.js'
 export { buildVerdict, catalogUrl, declaredDshRanges, hostOkFor, isOfficialPlugin, loadCatalog, loadGithubRepo, loadPackument, parsePackumentVersions, parseRepository, registryBase, resolveUpstream, selectCandidate, versionNeedsConfirmation } from './upstream.js'
 export { createHotOperations } from './hot.js'
 export type { DiscoverOptions } from './discovery.js'
